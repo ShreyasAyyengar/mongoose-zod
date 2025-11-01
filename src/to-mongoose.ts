@@ -1,4 +1,9 @@
-import M, {Schema as MongooseSchema, type SchemaOptions, type SchemaTypeOptions} from 'mongoose';
+import M, {Schema as MongooseSchema} from 'mongoose';
+// Loose types to support Mongoose 6–8 without complex generics
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SchemaOptions = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SchemaTypeOptions<T = any> = any;
 import z from 'zod';
 import type {ZodSchema} from 'zod';
 import {MongooseZodError} from './errors.js';

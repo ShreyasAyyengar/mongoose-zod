@@ -153,8 +153,8 @@ describe('Type options', () => {
 
     const Schema = toMongooseSchema(zodSchema);
 
-    expect(Schema.paths.info?.schema.paths.username?.options).toMatchObject(USERNAME_OPTIONS);
-    expect(Schema.paths.info?.schema.paths.registered?.options).toMatchObject(REGISTERED_OPTIONS);
+    expect(Schema.paths.info?.schema?.paths.username?.options).toMatchObject(USERNAME_OPTIONS);
+    expect(Schema.paths.info?.schema?.paths.registered?.options).toMatchObject(REGISTERED_OPTIONS);
   });
 
   it('Allows to set type options for a specific field in a sub schema with .mongooseTypeOptions()', () => {
@@ -171,8 +171,8 @@ describe('Type options', () => {
 
     const Schema = toMongooseSchema(zodSchema);
 
-    expect(Schema.paths.info?.schema.paths.username?.options).toMatchObject(USERNAME_OPTIONS);
-    expect(Schema.paths.info?.schema.paths.registered?.options).toMatchObject(REGISTERED_OPTIONS);
+    expect(Schema.paths.info?.schema?.paths.username?.options).toMatchObject(USERNAME_OPTIONS);
+    expect(Schema.paths.info?.schema?.paths.registered?.options).toMatchObject(REGISTERED_OPTIONS);
   });
 
   it('Merges type options set in .mongooseTypeOptions() with the ones set in .mongoose() in a sub schema', () => {
@@ -198,11 +198,11 @@ describe('Type options', () => {
 
     const Schema = toMongooseSchema(zodSchema);
 
-    expect(Schema.paths.info?.schema.paths.username?.options).toMatchObject({
+    expect(Schema.paths.info?.schema?.paths.username?.options).toMatchObject({
       ...USERNAME_OPTIONS_1,
       ...USERNAME_OPTIONS_2,
     });
-    expect(Schema.paths.info?.schema.paths.registered?.options).toMatchObject({
+    expect(Schema.paths.info?.schema?.paths.registered?.options).toMatchObject({
       ...REGISTERED_OPTIONS_1,
       ...REGISTERED_OPTIONS_2,
     });
@@ -232,11 +232,11 @@ describe('Type options', () => {
 
     const Schema = toMongooseSchema(zodSchema);
 
-    expect(Schema.paths.info?.schema.paths.username?.options).toMatchObject({
+    expect(Schema.paths.info?.schema?.paths.username?.options).toMatchObject({
       ...USERNAME_OPTIONS_1,
       ...USERNAME_OPTIONS_2,
     });
-    expect(Schema.paths.info?.schema.paths.registered?.options).toMatchObject({
+    expect(Schema.paths.info?.schema?.paths.registered?.options).toMatchObject({
       ...REGISTERED_OPTIONS_1,
       ...REGISTERED_OPTIONS_2,
     });

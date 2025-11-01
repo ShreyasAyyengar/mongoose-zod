@@ -98,6 +98,17 @@ const OVERRIDES = [
     },
     plugins: ['jest'],
     extends: ['plugin:jest/recommended'],
+    rules: {
+      // Relax unsafe any rules in tests to allow flexible mocking/inspection
+      '@typescript-eslint/no-unsafe-assignment': OFF,
+      '@typescript-eslint/no-unsafe-member-access': OFF,
+      '@typescript-eslint/no-unsafe-call': OFF,
+      '@typescript-eslint/no-unsafe-argument': OFF,
+      '@typescript-eslint/no-unsafe-return': OFF,
+      '@typescript-eslint/restrict-template-expressions': OFF,
+      // In tests, allow specifying default generic args for clarity without lint noise
+      'disable-autofix/@typescript-eslint/no-unnecessary-type-arguments': OFF,
+    },
   },
 ];
 

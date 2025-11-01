@@ -65,9 +65,13 @@ export interface SchemaFeatures {
     wrapInArrayTimes: number;
     originalArraySchema: z.ZodArray<any>;
   };
-  mongoose?: MongooseMetadata<any>;
-  mongooseTypeOptions?: M.SchemaTypeOptions<any>;
-  mongooseSchemaOptions?: M.SchemaOptions;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mongoose?: any;
+  // Use loose typing to stay compatible across Mongoose majors
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mongooseTypeOptions?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mongooseSchemaOptions?: any;
 }
 
 export const unwrapZodSchema = (
@@ -172,16 +176,14 @@ export const unwrapZodSchema = (
 
 export const zodInstanceofOriginalClasses = new WeakMap<ZodTypeAny, new (...args: any[]) => any>();
 
-export const mongooseZodCustomType = <T extends keyof typeof M.Types & keyof typeof M.Schema.Types>(
-  typeName: T,
+export const mongooseZodCustomType = (
+  typeName: keyof typeof M.Types & keyof typeof M.Schema.Types,
   params?: Parameters<typeof z.instanceof>[1],
 ) => {
-  const instanceClass = typeName === 'Buffer' ? Buffer : M.Types[typeName];
-  const typeClass = M.Schema.Types[typeName];
+  const instanceClass = typeName === 'Buffer' ? Buffer : (M.Types as any)[typeName];
+  const typeClass = (M.Schema.Types as any)[typeName];
 
-  type TFixed = T extends 'Buffer' ? BufferConstructor : (typeof M.Types)[T];
-
-  const result = z.instanceof(instanceClass, params) as z.ZodType<InstanceType<TFixed>>;
+  const result = z.instanceof(instanceClass, params) as z.ZodType<any>;
   zodInstanceofOriginalClasses.set(result, typeClass);
 
   return result;

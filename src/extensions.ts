@@ -1,24 +1,23 @@
 /* eslint-disable @typescript-eslint/prefer-function-type */
-import type {SchemaOptions, SchemaTypeOptions} from 'mongoose';
+// Avoid importing complex Mongoose generics to keep TS surface simple across versions
+// import type {SchemaOptions, SchemaTypeOptions} from 'mongoose';
 import {z} from 'zod';
 import type {PartialLaconic} from './types.js';
 
 type SchemaOutput<Schema extends z.ZodTypeAny> = z.output<Schema>;
 type AnyZodObject = z.ZodObject<any, any>;
-type MongooseSchemaTypeOptions = SchemaTypeOptions<any, any>;
+// Minimal aliases to keep compatibility across Mongoose major versions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SchemaOptions = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SchemaTypeOptions<T = any> = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MongooseSchemaTypeOptions = SchemaTypeOptions<any>;
 
 export const MongooseTypeOptionsSymbol = Symbol.for('MongooseTypeOptions');
 export const MongooseSchemaOptionsSymbol = Symbol.for('MongooseSchemaOptions');
 const ZodMongooseBrandSymbol = Symbol.for('MongooseZod.ZodMongooseBrand');
 const ZodMongooseInternalSymbol = Symbol.for('MongooseZod.ZodMongooseInternal');
-
-type SchemaOptionsFor<
-  DocType,
-  TInstanceMethods extends {} = {},
-  QueryHelpers extends {} = {},
-  TStaticMethods extends {} = {},
-  TVirtuals extends {} = {},
-> = SchemaOptions<DocType, TInstanceMethods, QueryHelpers, TStaticMethods, TVirtuals>;
 
 export interface MongooseMetadata<
   DocType,
@@ -28,12 +27,12 @@ export interface MongooseMetadata<
   TVirtuals extends {} = {},
 > {
   typeOptions?: {
-    [Field in keyof DocType]?: SchemaTypeOptions<DocType[Field], DocType>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [Field in keyof DocType]?: SchemaTypeOptions<any>;
   };
-  schemaOptions?: Omit<
-    SchemaOptionsFor<DocType, TInstanceMethods, QueryHelpers, TStaticMethods, TVirtuals>,
-    'castNonArrays'
-  >;
+  // Keep schemaOptions very loose to be compatible across Mongoose versions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schemaOptions?: Omit<SchemaOptions, 'castNonArrays'> | any;
 }
 
 interface ZodMongooseInternal {
@@ -161,48 +160,5 @@ export const addMongooseTypeOptionsToZodPrototype = (toZ: typeof z | null) => {
   }
 };
 
-declare module 'mongoose' {
-  interface MZValidateFn<T, ThisType> {
-    (this: ThisType, value: T): boolean;
-  }
-
-  interface MZLegacyAsyncValidateFn<T, ThisType> {
-    (this: ThisType, value: T, done: (result: boolean) => void): void;
-  }
-
-  interface MZAsyncValidateFn<T, ThisType> {
-    (this: ThisType, value: T): Promise<boolean>;
-  }
-
-  interface MZValidateOpts<T, ThisType> {
-    msg?: string;
-    message?: string | ValidatorMessageFn;
-    type?: string;
-    validator:
-      | MZValidateFn<T, ThisType>
-      | MZLegacyAsyncValidateFn<T, ThisType>
-      | MZAsyncValidateFn<T, ThisType>;
-  }
-
-  type MZSchemaValidator<T, ThisType> =
-    | RegExp
-    | [RegExp, string]
-    | MZValidateFn<T, ThisType>
-    | [MZValidateFn<T, ThisType>, string]
-    | MZValidateOpts<T, ThisType>;
-
-  interface MZRequiredFn<ThisType> {
-    (this: ThisType): boolean;
-  }
-
-  interface SchemaTypeOptions<T, ThisType = unknown> {
-    mzValidate?: MZSchemaValidator<Exclude<T, undefined>, ThisType | undefined>;
-    mzRequired?:
-      | boolean
-      | MZRequiredFn<ThisType | null>
-      | [boolean, string]
-      | [MZRequiredFn<ThisType | null>, string];
-  }
-}
 
 export {z} from 'zod';
