@@ -1,7 +1,7 @@
 import z5, { z } from 'zod';
 export { z } from 'zod';
 import M, { Schema } from 'mongoose';
-import { createRequire } from 'node:module';
+import { createRequire } from 'module';
 
 // src/index.ts
 var MongooseTypeOptionsSymbol = Symbol.for("MongooseTypeOptions");
@@ -103,37 +103,29 @@ var MongooseZodBoolean = class extends M.SchemaTypes.Boolean {
     super(...arguments);
     this.cast = noCastFn;
   }
-  static {
-    this.schemaName = "MongooseZodBoolean";
-  }
 };
+MongooseZodBoolean.schemaName = "MongooseZodBoolean";
 var MongooseZodDate = class extends M.SchemaTypes.Date {
   constructor() {
     super(...arguments);
     this.cast = noCastFn;
   }
-  static {
-    this.schemaName = "MongooseZodDate";
-  }
 };
+MongooseZodDate.schemaName = "MongooseZodDate";
 var MongooseZodNumber = class extends M.SchemaTypes.Number {
   constructor() {
     super(...arguments);
     this.cast = noCastFn;
   }
-  static {
-    this.schemaName = "MongooseZodNumber";
-  }
 };
+MongooseZodNumber.schemaName = "MongooseZodNumber";
 var MongooseZodString = class extends M.SchemaTypes.String {
   constructor() {
     super(...arguments);
     this.cast = noCastFn;
   }
-  static {
-    this.schemaName = "MongooseZodString";
-  }
 };
+MongooseZodString.schemaName = "MongooseZodString";
 var registerCustomMongooseZodTypes = () => {
   Object.assign(M.Schema.Types, {
     MongooseZodBoolean,
@@ -178,11 +170,12 @@ var isZodType = (schema, typeName) => {
   return schema.constructor.name === typeName;
 };
 var unwrapZodSchema = (schema, options = {}, _features = {}) => {
+  var _a, _b, _c;
   const monTypeOptions = getMongooseTypeOptions(schema);
-  _features.mongooseTypeOptions ||= monTypeOptions;
+  _features.mongooseTypeOptions || (_features.mongooseTypeOptions = monTypeOptions);
   const monSchemaOptions = getMongooseSchemaOptions(schema);
-  _features.mongooseSchemaOptions ||= monSchemaOptions;
-  if (isZodType(schema, "ZodNull") || isZodType(schema, "ZodLiteral") && schema._def.values?.includes(null)) {
+  _features.mongooseSchemaOptions || (_features.mongooseSchemaOptions = monSchemaOptions);
+  if (isZodType(schema, "ZodNull") || isZodType(schema, "ZodLiteral") && ((_a = schema._def.values) == null ? void 0 : _a.includes(null))) {
     _features.isNullable = true;
   }
   if (isZodType(schema, "ZodNullable")) {
@@ -194,8 +187,8 @@ var unwrapZodSchema = (schema, options = {}, _features = {}) => {
   if (isZodType(schema, "ZodUnion")) {
     const unionSchemas = schema._def.options;
     const unwrappedSchemas = unionSchemas.map((s) => unwrapZodSchema(s, { doNotUnwrapArrays: true }));
-    _features.isNullable ||= unwrappedSchemas.some(({ features }) => features.isNullable);
-    _features.isOptional ||= unwrappedSchemas.some(({ features }) => features.isOptional);
+    _features.isNullable || (_features.isNullable = unwrappedSchemas.some(({ features }) => features.isNullable));
+    _features.isOptional || (_features.isOptional = unwrappedSchemas.some(({ features }) => features.isOptional));
     if (!("default" in _features)) {
       const lastSchemaWithDefaultValue = unwrappedSchemas.filter((v) => "default" in v.features).at(-1);
       if (lastSchemaWithDefaultValue) {
@@ -206,7 +199,7 @@ var unwrapZodSchema = (schema, options = {}, _features = {}) => {
       ...new Set(unionSchemas.map((v) => v.constructor.name))
     ];
     if (uniqueUnionSchemaTypes.length === 1) {
-      _features.unionSchemaType ??= uniqueUnionSchemaTypes[0];
+      _features.unionSchemaType ?? (_features.unionSchemaType = uniqueUnionSchemaTypes[0]);
     }
   }
   if (isZodMongoose(schema)) {
@@ -240,13 +233,13 @@ var unwrapZodSchema = (schema, options = {}, _features = {}) => {
     );
   }
   if (isZodType(schema, "ZodArray") && !options.doNotUnwrapArrays) {
-    const wrapInArrayTimes = Number(_features.array?.wrapInArrayTimes || 0) + 1;
+    const wrapInArrayTimes = Number(((_b = _features.array) == null ? void 0 : _b.wrapInArrayTimes) || 0) + 1;
     return unwrapZodSchema(schema._def.element, options, {
       ..._features,
       array: {
         ..._features.array,
         wrapInArrayTimes,
-        originalArraySchema: _features.array?.originalArraySchema || schema
+        originalArraySchema: ((_c = _features.array) == null ? void 0 : _c.originalArraySchema) || schema
       }
     });
   }
@@ -278,6 +271,7 @@ var getStrictOptionValue = (unknownKeys, schemaFeatures) => {
   return isStrictThrow ? "throw" : !isStrictFalse;
 };
 var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
+  var _a, _b, _c;
   const {
     fieldsStack = [],
     monSchemaOptions,
@@ -306,7 +300,8 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
     ["required", monTypeOptions.mzRequired]
   ];
   mzOptions.forEach(([origName]) => {
-    const mzName = `mz${origName[0]?.toUpperCase()}${origName.slice(1)}`;
+    var _a2;
+    const mzName = `mz${(_a2 = origName[0]) == null ? void 0 : _a2.toUpperCase()}${origName.slice(1)}`;
     if (mzName in monTypeOptions) {
       if (origName in monTypeOptions) {
         throwError(`Can't have both "${mzName}" and "${origName}" set`);
@@ -370,7 +365,7 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
   }
   let fieldType;
   let errMsgAddendum = "";
-  const typeKey = (isRoot ? monSchemaOptions?.typeKey : context.typeKey) ?? "type";
+  const typeKey = (isRoot ? monSchemaOptions == null ? void 0 : monSchemaOptions.typeKey : context.typeKey) ?? "type";
   if (isZodType(zodSchemaFinal, "ZodObject")) {
     const relevantSchema = isRoot ? monSchema : new Schema(
       {},
@@ -386,8 +381,8 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
       addMongooseSchemaFields(S, relevantSchema, {
         ...context,
         fieldsStack: [...fieldsStack, key],
-        monTypeOptions: monMetadata.typeOptions?.[key],
-        typeKey: monMetadata.schemaOptions?.typeKey ?? typeKey
+        monTypeOptions: (_a = monMetadata.typeOptions) == null ? void 0 : _a[key],
+        typeKey: ((_b = monMetadata.schemaOptions) == null ? void 0 : _b.typeKey) ?? typeKey
       });
     }
     if (isRoot) {
@@ -492,8 +487,9 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
       [typeKey]: fieldType
     }
   });
-  monSchema.paths[addToField]?.validate(function(value) {
-    let schemaToValidate = schemaFeatures.array?.originalArraySchema || zodSchemaFinal;
+  (_c = monSchema.paths[addToField]) == null ? void 0 : _c.validate(function(value) {
+    var _a2;
+    let schemaToValidate = ((_a2 = schemaFeatures.array) == null ? void 0 : _a2.originalArraySchema) || zodSchemaFinal;
     if (isZodType(schemaToValidate, "ZodObject")) {
       schemaToValidate = z5.preprocess((obj) => {
         if (!obj || typeof obj !== "object") {
@@ -529,10 +525,11 @@ var ALL_PLUGINS_DISABLED = {
   leanVirtuals: true
 };
 var toMongooseSchema = (rootZodSchema, options = {}) => {
+  var _a, _b;
   if (!isZodMongoose(rootZodSchema)) {
     throw new MongooseZodError("Root schema must be an instance of ZodMongoose");
   }
-  const globalOptions = setupState.options?.defaultToMongooseSchemaOptions || {};
+  const globalOptions = ((_a = setupState.options) == null ? void 0 : _a.defaultToMongooseSchemaOptions) || {};
   const optionsFinal = {
     ...globalOptions,
     ...options,
@@ -569,13 +566,13 @@ var toMongooseSchema = (rootZodSchema, options = {}) => {
             } : leanOptions
           );
         },
-        ...schemaOptions?.query
+        ...schemaOptions == null ? void 0 : schemaOptions.query
       }
     }
   );
   addMongooseSchemaFields(rootZodSchema, schema, { monSchemaOptions: schemaOptions, unknownKeys });
   addMLVPlugin && schema.plugin(mlvPlugin.module);
-  addMLDPlugin && schema.plugin(mldPlugin.module?.default);
+  addMLDPlugin && schema.plugin((_b = mldPlugin.module) == null ? void 0 : _b.default);
   addMLGPlugin && schema.plugin(mlgPlugin.module);
   return schema;
 };
