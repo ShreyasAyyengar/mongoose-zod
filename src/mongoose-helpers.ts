@@ -2,7 +2,6 @@ import M from 'mongoose';
 import {z} from 'zod';
 import {MongooseZodError} from './errors.js';
 import {mergeMongooseSchemaOptions} from './extensions.js';
-import type {ZodMongoose} from './extensions.js';
 
 type StringLiteral<T> = T extends string ? (string extends T ? never : T) : never;
 
@@ -31,11 +30,6 @@ export const genTimestampsSchema = <CrAt = 'createdAt', UpAt = 'updatedAt'>(
   });
   return schema;
 };
-
-export type MongooseSchemaTypeParameters<
-  T,
-  Parameter extends 'InstanceMethods' | 'QueryHelpers' | 'TStaticMethods' | 'TVirtuals',
-> = any;
 
 const noCastFn = <Value>(value: Value) => value;
 

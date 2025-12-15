@@ -2,42 +2,33 @@
 // Avoid importing complex Mongoose generics to keep TS surface simple across versions
 // import type {SchemaOptions, SchemaTypeOptions} from 'mongoose';
 import {z} from 'zod';
-import type {PartialLaconic} from './types.js';
 
-type SchemaOutput<Schema extends z.ZodTypeAny> = z.output<Schema>;
 type AnyZodObject = z.ZodObject<any, any>;
 // Minimal aliases to keep compatibility across Mongoose major versions
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SchemaOptions = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SchemaTypeOptions<T = any> = any;
+type SchemaTypeOptions = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type MongooseSchemaTypeOptions = SchemaTypeOptions<any>;
+type MongooseSchemaTypeOptions = any;
 
 export const MongooseTypeOptionsSymbol = Symbol.for('MongooseTypeOptions');
 export const MongooseSchemaOptionsSymbol = Symbol.for('MongooseSchemaOptions');
 const ZodMongooseBrandSymbol = Symbol.for('MongooseZod.ZodMongooseBrand');
 const ZodMongooseInternalSymbol = Symbol.for('MongooseZod.ZodMongooseInternal');
 
-export interface MongooseMetadata<
-  DocType,
-  TInstanceMethods extends {} = {},
-  QueryHelpers extends {} = {},
-  TStaticMethods extends {} = {},
-  TVirtuals extends {} = {},
-> {
+export interface MongooseMetadata<DocType> {
   typeOptions?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [Field in keyof DocType]?: SchemaTypeOptions<any>;
+    [Field in keyof DocType]?: SchemaTypeOptions;
   };
   // Keep schemaOptions very loose to be compatible across Mongoose versions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schemaOptions?: Omit<SchemaOptions, 'castNonArrays'> | any;
+  schemaOptions?: Omit<SchemaOptions, 'castNonArrays'>;
 }
 
 interface ZodMongooseInternal {
   innerType: AnyZodObject;
-  mongoose: MongooseMetadata<any, any, any, any, any>;
+  mongoose: MongooseMetadata<any>;
 }
 
 export type ZodMongoose = AnyZodObject & {
@@ -61,10 +52,14 @@ const withMutableDef = <Schema extends z.ZodTypeAny>(schema: Schema): Schema & A
 
 export const getMongooseTypeOptions = (
   schema: z.ZodTypeAny,
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 ): MongooseSchemaTypeOptions | undefined =>
   withMutableDef(schema)._def[MongooseTypeOptionsSymbol];
 
-export const getMongooseSchemaOptions = (schema: z.ZodTypeAny): SchemaOptions | undefined =>
+export const getMongooseSchemaOptions = (
+  schema: z.ZodTypeAny,
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+): SchemaOptions | undefined =>
   withMutableDef(schema)._def[MongooseSchemaOptionsSymbol];
 
 export const mergeMongooseSchemaOptions = <Schema extends z.ZodTypeAny>(
@@ -81,7 +76,7 @@ export const mergeMongooseSchemaOptions = <Schema extends z.ZodTypeAny>(
 
 const attachMongooseMetadata = (
   schema: AnyZodObject,
-  metadata: MongooseMetadata<any, any, any, any, any>,
+  metadata: MongooseMetadata<any>,
   inner: AnyZodObject,
 ) => {
   const internal: ZodMongooseInternal = {
@@ -108,14 +103,14 @@ const attachMongooseMetadata = (
 
 declare module 'zod' {
   interface ZodType {
-    mongooseTypeOptions(options: MongooseSchemaTypeOptions): this;
-    mongoose(metadata?: MongooseMetadata<any, any, any, any, any>): ZodMongoose;
+    mongooseTypeOptions: (options: MongooseSchemaTypeOptions) => this;
+    mongoose: (metadata?: MongooseMetadata<any>) => ZodMongoose;
   }
 }
 
 export const toZodMongooseSchema = function (
   zObject: AnyZodObject,
-  metadata: MongooseMetadata<any, any, any, any, any> = {},
+  metadata: MongooseMetadata<any> = {},
 ) {
   const cloned = zObject.clone() as AnyZodObject;
   return attachMongooseMetadata(cloned, metadata, zObject);
@@ -129,9 +124,9 @@ export const addMongooseToZodPrototype = (toZ: typeof z | null) => {
   } else if (toZ.ZodObject.prototype.mongoose === undefined) {
     toZ.ZodObject.prototype.mongoose = function (
       this: AnyZodObject,
-      metadata: MongooseMetadata<any, any, any, any, any> = {},
+      metadata: MongooseMetadata<any> = {},
     ) {
-      return toZodMongooseSchema(this, metadata as MongooseMetadata<any, any, any, any, any>);
+      return toZodMongooseSchema(this, metadata);
     };
   }
 };
@@ -142,7 +137,7 @@ export const addMongooseTypeOptions = function <Schema extends z.ZodTypeAny>(
 ) {
   const schemaWithDef = withMutableDef(schema);
   schemaWithDef._def[MongooseTypeOptionsSymbol] = {
-    ...(schemaWithDef._def[MongooseTypeOptionsSymbol] ?? {}),
+    ...schemaWithDef._def[MongooseTypeOptionsSymbol],
     ...options,
   } as MongooseSchemaTypeOptions;
   return schema;

@@ -4,8 +4,8 @@ import {z} from 'zod';
 import {mongooseZodCustomType, toMongooseSchema} from '../src/index.js';
 
 describe('Mongoose types', () => {
-  type LeanBufferDoc = {data?: Buffer};
-  type LeanBufferSubDoc = {a: {data: Buffer}};
+  interface LeanBufferDoc {data?: Buffer}
+  interface LeanBufferSubDoc {a: {data: Buffer}}
 
   let mongoServer: MongoMemoryServer;
 
@@ -91,7 +91,7 @@ describe('Mongoose types', () => {
     await docRaw.save();
     const doc = (await Model.findOne({_id: docRaw._id}).lean()) as LeanBufferDoc;
 
-    expect(doc?.data).toBeInstanceOf(Buffer);
+    expect(doc.data).toBeInstanceOf(Buffer);
   });
 
   it('Correctly works with Buffer type in sub schemas', async () => {
@@ -108,7 +108,7 @@ describe('Mongoose types', () => {
     await docRaw.save();
     const doc = (await Model.findOne({_id: docRaw._id}).lean()) as LeanBufferSubDoc;
 
-    expect(doc?.a.data).toBeInstanceOf(Buffer);
+    expect(doc.a.data).toBeInstanceOf(Buffer);
   });
 
   it('Do not overwrites custom getter set on a field having Buffer type', async () => {

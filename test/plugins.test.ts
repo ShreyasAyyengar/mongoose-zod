@@ -7,9 +7,9 @@ import {getSchemaPlugins, importModule} from './shared.js';
 
 const TEST_USERNAME = 'mongoose-zod';
 
-  type LeanUserVirtual = {username?: string; u?: string};
-  type LeanUserGetter = {username?: string};
-  type LeanUserDefaults = {__v?: number};
+  interface LeanUserVirtual {username?: string; u?: string}
+  interface LeanUserGetter {username?: string}
+  interface LeanUserDefaults {__v?: number}
 
 describe('Plugins', () => {
   let mongoServer: MongoMemoryServer;
@@ -89,8 +89,8 @@ describe('Plugins', () => {
       const user = await UserWithVirtual.findOne({username: TEST_USERNAME}).lean();
       const userVirtual = user as LeanUserVirtual;
 
-      expect(userVirtual?.username).toBe(TEST_USERNAME);
-      expect(userVirtual?.u).toEqual(userVirtual?.username);
+      expect(userVirtual.username).toBe(TEST_USERNAME);
+      expect(userVirtual.u).toEqual(userVirtual.username);
     });
 
     it('Allows to override "virtuals: true" when using .lean()', async () => {
@@ -237,7 +237,7 @@ describe('Plugins', () => {
       const user = await UserWithGetter.findOne({username: TEST_USERNAME}).lean();
       const userGetter = user as LeanUserGetter;
 
-      expect(userGetter?.username).toBe(TEST_USERNAME.toUpperCase());
+      expect(userGetter.username).toBe(TEST_USERNAME.toUpperCase());
     });
 
     it('Allows to override "getters: true" when using .lean()', async () => {

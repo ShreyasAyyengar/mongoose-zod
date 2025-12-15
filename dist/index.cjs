@@ -65,7 +65,7 @@ var addMongooseToZodPrototype = (toZ) => {
 var addMongooseTypeOptions = function(schema, options) {
   const schemaWithDef = withMutableDef(schema);
   schemaWithDef._def[MongooseTypeOptionsSymbol] = {
-    ...schemaWithDef._def[MongooseTypeOptionsSymbol] ?? {},
+    ...schemaWithDef._def[MongooseTypeOptionsSymbol],
     ...options
   };
   return schema;
@@ -177,12 +177,12 @@ var isZodType = (schema, typeName) => {
   return schema.constructor.name === typeName;
 };
 var unwrapZodSchema = (schema, options = {}, _features = {}) => {
-  var _a, _b, _c;
+  var _a, _b;
   const monTypeOptions = getMongooseTypeOptions(schema);
   _features.mongooseTypeOptions || (_features.mongooseTypeOptions = monTypeOptions);
   const monSchemaOptions = getMongooseSchemaOptions(schema);
   _features.mongooseSchemaOptions || (_features.mongooseSchemaOptions = monSchemaOptions);
-  if (isZodType(schema, "ZodNull") || isZodType(schema, "ZodLiteral") && ((_a = schema._def.values) == null ? void 0 : _a.includes(null))) {
+  if (isZodType(schema, "ZodNull") || isZodType(schema, "ZodLiteral") && schema._def.values[0] === null) {
     _features.isNullable = true;
   }
   if (isZodType(schema, "ZodNullable")) {
@@ -240,13 +240,13 @@ var unwrapZodSchema = (schema, options = {}, _features = {}) => {
     );
   }
   if (isZodType(schema, "ZodArray") && !options.doNotUnwrapArrays) {
-    const wrapInArrayTimes = Number(((_b = _features.array) == null ? void 0 : _b.wrapInArrayTimes) || 0) + 1;
+    const wrapInArrayTimes = Number(((_a = _features.array) == null ? void 0 : _a.wrapInArrayTimes) || 0) + 1;
     return unwrapZodSchema(schema._def.element, options, {
       ..._features,
       array: {
         ..._features.array,
         wrapInArrayTimes,
-        originalArraySchema: ((_c = _features.array) == null ? void 0 : _c.originalArraySchema) || schema
+        originalArraySchema: ((_b = _features.array) == null ? void 0 : _b.originalArraySchema) || schema
       }
     });
   }
@@ -408,7 +408,7 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
   } else if (isZodType(zodSchemaFinal, "ZodBoolean") || unionSchemaType === "ZodBoolean") {
     fieldType = MongooseZodBoolean;
   } else if (isZodType(zodSchemaFinal, "ZodLiteral")) {
-    const literalValues = zodSchemaFinal._def.values ?? [];
+    const literalValues = zodSchemaFinal._def.values;
     if (literalValues.length !== 1) {
       errMsgAddendum = "multiple literal values are not supported";
     }
@@ -428,10 +428,11 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
         break;
       }
       case "object": {
-        if (!literalValue) {
+        if (literalValue === null) {
           fieldType = MongooseMixed;
+        } else {
+          errMsgAddendum = "object literals are not supported";
         }
-        errMsgAddendum = "object literals are not supported";
         break;
       }
       default: {
@@ -439,15 +440,8 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
       }
     }
   } else if (isZodType(zodSchemaFinal, "ZodEnum")) {
-    const entries = zodSchemaFinal.enum || {};
-    const hasNativeEnumShape = Object.entries(entries).some(([key, value]) => {
-      if (typeof value === "string" || typeof value === "number") {
-        return String(value) !== key;
-      }
-      return true;
-    });
-    const rawOptions = zodSchemaFinal.options;
-    const enumValues = hasNativeEnumShape ? getValidEnumValues(entries) : Array.isArray(rawOptions) ? [...rawOptions] : getValidEnumValues(entries);
+    const entries = zodSchemaFinal._def.entries || {};
+    const enumValues = getValidEnumValues(entries);
     if (!Array.isArray(enumValues) || enumValues.length === 0) {
       errMsgAddendum = "enum must contain at least one value";
     } else if (enumValues.every((v) => typeof v === "string")) {
@@ -455,11 +449,7 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
     } else if (enumValues.every((v) => typeof v === "number")) {
       fieldType = MongooseZodNumber;
     } else {
-      if (hasNativeEnumShape && enumValues.every((v) => ["string", "number"].includes(typeof v))) {
-        fieldType = MongooseMixed;
-      } else {
-        errMsgAddendum = "only nonempty zod enums with values of a single primitive type (string or number) are supported";
-      }
+      fieldType = MongooseMixed;
     }
   } else if (isZodType(zodSchema, "ZodNaN") || isZodType(zodSchema, "ZodNull")) {
     fieldType = MongooseMixed;
@@ -547,7 +537,7 @@ var toMongooseSchema = (rootZodSchema, options = {}) => {
   };
   const { disablePlugins: dp, unknownKeys } = optionsFinal;
   const internal = getZodMongooseInternal(rootZodSchema);
-  const schemaOptionsFromField = internal.innerType ? getMongooseSchemaOptions(internal.innerType) : void 0;
+  const schemaOptionsFromField = getMongooseSchemaOptions(internal.innerType);
   const { schemaOptions = {} } = internal.mongoose;
   const addMLVPlugin = mlvPlugin && !isPluginDisabled("leanVirtuals", dp);
   const addMLDPlugin = mldPlugin && !isPluginDisabled("leanDefaults", dp);
@@ -573,7 +563,7 @@ var toMongooseSchema = (rootZodSchema, options = {}) => {
             } : leanOptions
           );
         },
-        ...schemaOptions == null ? void 0 : schemaOptions.query
+        ...schemaOptions.query
       }
     }
   );

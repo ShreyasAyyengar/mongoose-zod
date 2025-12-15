@@ -4,7 +4,6 @@ import M from 'mongoose';
 import {z} from 'zod';
 import type {ZodSchema, ZodTypeAny} from 'zod';
 import {
-  type MongooseMetadata,
   getMongooseSchemaOptions,
   getMongooseTypeOptions,
   getZodMongooseInternal,
@@ -86,7 +85,7 @@ export const unwrapZodSchema = (
 
   if (
     isZodType(schema, 'ZodNull') ||
-    (isZodType(schema, 'ZodLiteral') && schema._def.values?.includes(null))
+    (isZodType(schema, 'ZodLiteral') && schema._def.values[0] === null)
   ) {
     _features.isNullable = true;
   }

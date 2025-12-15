@@ -1,16 +1,10 @@
 import M, {Schema as MongooseSchema} from 'mongoose';
-// Loose types to support Mongoose 6–8 without complex generics
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SchemaOptions = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SchemaTypeOptions<T = any> = any;
 import z from 'zod';
 import type {ZodSchema} from 'zod';
 import {MongooseZodError} from './errors.js';
 import type {ZodMongoose} from './extensions.js';
 import {getMongooseSchemaOptions, getZodMongooseInternal, isZodMongoose} from './extensions.js';
 import {
-  type MongooseSchemaTypeParameters,
   MongooseZodBoolean,
   MongooseZodDate,
   MongooseZodNumber,
@@ -27,6 +21,12 @@ import {
   unwrapZodSchema,
   zodInstanceofOriginalClasses,
 } from './zod-helpers.js';
+
+// Loose types to support Mongoose 6–8 without complex generics
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SchemaOptions = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SchemaTypeOptions = any;
 
 const {Mixed: MongooseMixed} = M.Schema.Types;
 // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -63,7 +63,7 @@ const addMongooseSchemaFields = (
     unknownKeys?: UnknownKeysHandling;
     fieldsStack?: string[];
     monSchemaOptions?: SchemaOptions;
-    monTypeOptions?: SchemaTypeOptions<any>;
+    monTypeOptions?: SchemaTypeOptions;
     typeKey?: string;
   },
 ): void => {
@@ -111,7 +111,7 @@ const addMongooseSchemaFields = (
     }
   });
 
-  const commonFieldOptions: SchemaTypeOptions<any> = {
+  const commonFieldOptions: SchemaTypeOptions = {
     required: isRequired,
     ...('default' in schemaFeatures
       ? {default: schemaFeatures.default}
@@ -217,7 +217,7 @@ const addMongooseSchemaFields = (
   } else if (isZodType(zodSchemaFinal, 'ZodBoolean') || unionSchemaType === 'ZodBoolean') {
     fieldType = MongooseZodBoolean;
   } else if (isZodType(zodSchemaFinal, 'ZodLiteral')) {
-    const literalValues = zodSchemaFinal._def.values ?? [];
+    const literalValues = zodSchemaFinal._def.values;
     if (literalValues.length !== 1) {
       errMsgAddendum = 'multiple literal values are not supported';
     }
@@ -241,10 +241,11 @@ const addMongooseSchemaFields = (
         break;
       }
       case 'object': {
-        if (!literalValue) {
+        if (literalValue === null) {
           fieldType = MongooseMixed;
+        } else {
+          errMsgAddendum = 'object literals are not supported';
         }
-        errMsgAddendum = 'object literals are not supported';
         break;
       }
       default: {
@@ -252,19 +253,11 @@ const addMongooseSchemaFields = (
       }
     }
   } else if (isZodType(zodSchemaFinal, 'ZodEnum')) {
-    const entries = zodSchemaFinal.enum || {};
-    const hasNativeEnumShape = Object.entries(entries).some(([key, value]) => {
-      if (typeof value === 'string' || typeof value === 'number') {
-        return String(value) !== key;
-      }
-      return true;
-    });
-    const rawOptions = (zodSchemaFinal as any).options;
-    const enumValues = hasNativeEnumShape
-      ? getValidEnumValues(entries)
-      : Array.isArray(rawOptions)
-        ? [...rawOptions]
-        : getValidEnumValues(entries);
+    const entries = zodSchemaFinal._def.entries || {};
+    // Check if this is a z.enum() (where key === String(value)) or z.nativeEnum()
+    const isZodEnum = Object.entries(entries).every(([k, v]) => k === String(v));
+    // For z.enum(), use Object.values directly. For z.nativeEnum(), use getValidEnumValues to handle reverse mapping
+    const enumValues = isZodEnum ? Object.values(entries) : getValidEnumValues(entries);
     if (!Array.isArray(enumValues) || enumValues.length === 0) {
       errMsgAddendum = 'enum must contain at least one value';
     } else if (enumValues.every((v) => typeof v === 'string')) {
@@ -272,7 +265,13 @@ const addMongooseSchemaFields = (
     } else if (enumValues.every((v) => typeof v === 'number')) {
       fieldType = MongooseZodNumber;
     } else {
-      if (hasNativeEnumShape && enumValues.every((v) => ['string', 'number'].includes(typeof v))) {
+      const hasString = enumValues.some((v) => typeof v === 'string');
+      const hasNumber = enumValues.some((v) => typeof v === 'number');
+      const hasOther = enumValues.some((v) => typeof v !== 'string' && typeof v !== 'number');
+
+      // Only z.nativeEnum() with mixed string/number (no other types) is allowed to use Mixed
+      // z.enum() with mixed types should throw an error
+      if (!isZodEnum && hasString && hasNumber && !hasOther) {
         fieldType = MongooseMixed;
       } else {
         errMsgAddendum =
@@ -405,9 +404,7 @@ export const toMongooseSchema = (
   const {disablePlugins: dp, unknownKeys} = optionsFinal;
 
   const internal = getZodMongooseInternal(rootZodSchema);
-  const schemaOptionsFromField = internal.innerType
-    ? getMongooseSchemaOptions(internal.innerType)
-    : undefined;
+  const schemaOptionsFromField = getMongooseSchemaOptions(internal.innerType);
   const {schemaOptions = {}} = internal.mongoose;
 
   const addMLVPlugin = mlvPlugin && !isPluginDisabled('leanVirtuals', dp);
@@ -437,7 +434,7 @@ export const toMongooseSchema = (
               : leanOptions,
           );
         },
-        ...schemaOptions?.query,
+        ...schemaOptions.query,
       },
     } as SchemaOptions,
   ) as MongooseSchema<any, any, any, any, any, any>;

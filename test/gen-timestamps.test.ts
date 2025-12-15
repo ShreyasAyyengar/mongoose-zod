@@ -75,8 +75,11 @@ describe('Generate timestamps schema helper', () => {
     const doc = new Model() as TimestampDoc;
     await doc.save();
 
-    expect(doc.cd!).toBeInstanceOf(Date);
-    expect(doc.ud!).toBeInstanceOf(Date);
+    expect(doc.cd).toBeInstanceOf(Date);
+    expect(doc.ud).toBeInstanceOf(Date);
+    expect(doc.cd).toBeDefined();
+    expect(doc.ud).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(doc.cd!.getTime() / 1000).toBeCloseTo(doc.ud!.getTime() / 1000, 2);
     expect((doc as any).createdAt).toBeUndefined();
     expect((doc as any).uptdatedAt).toBeUndefined();

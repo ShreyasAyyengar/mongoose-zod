@@ -11,21 +11,21 @@ declare const bufferMongooseGetter: (value: unknown) => unknown;
 
 type AnyZodObject = z.ZodObject<any, any>;
 type SchemaOptions = any;
-type SchemaTypeOptions<T = any> = any;
-type MongooseSchemaTypeOptions = SchemaTypeOptions<any>;
+type SchemaTypeOptions = any;
+type MongooseSchemaTypeOptions = any;
 declare const MongooseTypeOptionsSymbol: unique symbol;
 declare const MongooseSchemaOptionsSymbol: unique symbol;
 declare const ZodMongooseBrandSymbol: unique symbol;
 declare const ZodMongooseInternalSymbol: unique symbol;
-interface MongooseMetadata<DocType, TInstanceMethods extends {} = {}, QueryHelpers extends {} = {}, TStaticMethods extends {} = {}, TVirtuals extends {} = {}> {
+interface MongooseMetadata<DocType> {
     typeOptions?: {
-        [Field in keyof DocType]?: SchemaTypeOptions<any>;
+        [Field in keyof DocType]?: SchemaTypeOptions;
     };
-    schemaOptions?: Omit<SchemaOptions, 'castNonArrays'> | any;
+    schemaOptions?: Omit<SchemaOptions, 'castNonArrays'>;
 }
 interface ZodMongooseInternal {
     innerType: AnyZodObject;
-    mongoose: MongooseMetadata<any, any, any, any, any>;
+    mongoose: MongooseMetadata<any>;
 }
 type ZodMongoose = AnyZodObject & {
     readonly [ZodMongooseBrandSymbol]: true;
@@ -38,11 +38,11 @@ declare const getMongooseSchemaOptions: (schema: z.ZodTypeAny) => SchemaOptions 
 declare const mergeMongooseSchemaOptions: <Schema extends z.ZodType<unknown, unknown, z.core.$ZodTypeInternals<unknown, unknown>>>(schema: Schema, options: SchemaOptions) => Schema;
 declare module 'zod' {
     interface ZodType {
-        mongooseTypeOptions(options: MongooseSchemaTypeOptions): this;
-        mongoose(metadata?: MongooseMetadata<any, any, any, any, any>): ZodMongoose;
+        mongooseTypeOptions: (options: MongooseSchemaTypeOptions) => this;
+        mongoose: (metadata?: MongooseMetadata<any>) => ZodMongoose;
     }
 }
-declare const toZodMongooseSchema: (zObject: AnyZodObject, metadata?: MongooseMetadata<any, any, any, any, any>) => ZodMongoose;
+declare const toZodMongooseSchema: (zObject: AnyZodObject, metadata?: MongooseMetadata<any>) => ZodMongoose;
 declare const addMongooseTypeOptions: <Schema extends z.ZodType<unknown, unknown, z.core.$ZodTypeInternals<unknown, unknown>>>(schema: Schema, options: MongooseSchemaTypeOptions) => Schema;
 
 type UnknownKeysHandling = 'throw' | 'strip' | 'strip-unless-overridden';
