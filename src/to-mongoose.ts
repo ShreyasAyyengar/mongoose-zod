@@ -210,14 +210,23 @@ const addMongooseSchemaFields = (
     fieldType = relevantSchema;
   } else if (isZodType(zodSchemaFinal, 'ZodNumber') || unionSchemaType === 'ZodNumber') {
     fieldType = MongooseZodNumber;
-  } else if (isZodType(zodSchemaFinal, 'ZodString') || unionSchemaType === 'ZodString') {
+  } else if (
+    isZodType(zodSchemaFinal, 'ZodString') ||
+    isZodType(zodSchemaFinal, 'ZodEmail') ||
+    isZodType(zodSchemaFinal, 'ZodURL') ||
+    isZodType(zodSchemaFinal, 'ZodUUID') ||
+    unionSchemaType === 'ZodString' ||
+    unionSchemaType === 'ZodEmail' ||
+    unionSchemaType === 'ZodURL' ||
+    unionSchemaType === 'ZodUUID'
+  ) {
     fieldType = MongooseZodString;
   } else if (isZodType(zodSchemaFinal, 'ZodDate') || unionSchemaType === 'ZodDate') {
     fieldType = MongooseZodDate;
   } else if (isZodType(zodSchemaFinal, 'ZodBoolean') || unionSchemaType === 'ZodBoolean') {
     fieldType = MongooseZodBoolean;
   } else if (isZodType(zodSchemaFinal, 'ZodLiteral')) {
-    const literalValues = zodSchemaFinal._def.values;
+    const literalValues = (zodSchemaFinal as any)._def.values;
     if (literalValues.length !== 1) {
       errMsgAddendum = 'multiple literal values are not supported';
     }
@@ -253,7 +262,7 @@ const addMongooseSchemaFields = (
       }
     }
   } else if (isZodType(zodSchemaFinal, 'ZodEnum')) {
-    const entries = zodSchemaFinal._def.entries || {};
+    const entries = (zodSchemaFinal as any)._def.entries || {};
     // Check if this is a z.enum() (where key === String(value)) or z.nativeEnum()
     const isZodEnum = Object.entries(entries).every(([k, v]) => k === String(v));
     // For z.enum(), use Object.values directly. For z.nativeEnum(), use getValidEnumValues to handle reverse mapping

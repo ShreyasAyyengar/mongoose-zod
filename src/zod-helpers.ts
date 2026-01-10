@@ -17,6 +17,7 @@ export interface ZodTypes {
   ZodBoolean: z.ZodBoolean;
   ZodDate: z.ZodDate;
   ZodDefault: z.ZodDefault<any>;
+  ZodEmail: z.ZodEmail;
   ZodEnum: z.ZodEnum<any>;
   ZodFunction: z.ZodFunction<any, any>;
   ZodIntersection: z.ZodIntersection<any, any>;
@@ -39,6 +40,8 @@ export interface ZodTypes {
   ZodUnion: z.ZodUnion<any>;
   ZodDiscriminatedUnion: z.ZodDiscriminatedUnion<any, any>;
   ZodUnknown: z.ZodUnknown;
+  ZodURL: z.ZodURL;
+  ZodUUID: z.ZodUUID;
   ZodVoid: z.ZodVoid;
   ZodPipe: z.ZodPipe<any, any>;
   ZodTransform: z.ZodTransform<any>;

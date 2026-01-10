@@ -394,7 +394,7 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
     fieldType = relevantSchema;
   } else if (isZodType(zodSchemaFinal, "ZodNumber") || unionSchemaType === "ZodNumber") {
     fieldType = MongooseZodNumber;
-  } else if (isZodType(zodSchemaFinal, "ZodString") || unionSchemaType === "ZodString") {
+  } else if (isZodType(zodSchemaFinal, "ZodString") || isZodType(zodSchemaFinal, "ZodEmail") || isZodType(zodSchemaFinal, "ZodURL") || isZodType(zodSchemaFinal, "ZodUUID") || unionSchemaType === "ZodString" || unionSchemaType === "ZodEmail" || unionSchemaType === "ZodURL" || unionSchemaType === "ZodUUID") {
     fieldType = MongooseZodString;
   } else if (isZodType(zodSchemaFinal, "ZodDate") || unionSchemaType === "ZodDate") {
     fieldType = MongooseZodDate;
@@ -434,7 +434,8 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
     }
   } else if (isZodType(zodSchemaFinal, "ZodEnum")) {
     const entries = zodSchemaFinal._def.entries || {};
-    const enumValues = getValidEnumValues(entries);
+    const isZodEnum = Object.entries(entries).every(([k, v]) => k === String(v));
+    const enumValues = isZodEnum ? Object.values(entries) : getValidEnumValues(entries);
     if (!Array.isArray(enumValues) || enumValues.length === 0) {
       errMsgAddendum = "enum must contain at least one value";
     } else if (enumValues.every((v) => typeof v === "string")) {
@@ -442,7 +443,14 @@ var addMongooseSchemaFields = (zodSchema, monSchema, context) => {
     } else if (enumValues.every((v) => typeof v === "number")) {
       fieldType = MongooseZodNumber;
     } else {
-      fieldType = MongooseMixed;
+      const hasString = enumValues.some((v) => typeof v === "string");
+      const hasNumber = enumValues.some((v) => typeof v === "number");
+      const hasOther = enumValues.some((v) => typeof v !== "string" && typeof v !== "number");
+      if (!isZodEnum && hasString && hasNumber && !hasOther) {
+        fieldType = MongooseMixed;
+      } else {
+        errMsgAddendum = "only nonempty zod enums with values of a single primitive type (string or number) are supported";
+      }
     }
   } else if (isZodType(zodSchema, "ZodNaN") || isZodType(zodSchema, "ZodNull")) {
     fieldType = MongooseMixed;
