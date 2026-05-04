@@ -11,7 +11,7 @@ describe('Mongoose types', () => {
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
-    await M.connect(mongoServer.getUri(), {});
+    await M.connect(mongoServer.getUri());
   });
 
   afterAll(async () => {

@@ -16,7 +16,7 @@ describe('Plugins', () => {
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
-    await M.connect(mongoServer.getUri(), {});
+    await M.connect(mongoServer.getUri());
   });
 
   afterAll(async () => {

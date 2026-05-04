@@ -1,7 +1,7 @@
 {
   "include": ["src", "test"],
   "compilerOptions": {
-    "target": "es2020",
+    "target": "es2022",
     "module": "CommonJS",
     "moduleResolution": "Node",
     "esModuleInterop": true,
@@ -9,6 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["node", "jest"]
   }
 }

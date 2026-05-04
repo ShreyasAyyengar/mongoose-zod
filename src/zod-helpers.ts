@@ -162,7 +162,7 @@ export const unwrapZodSchema = (
   }
 
   if (isZodType(schema, 'ZodArray') && !options.doNotUnwrapArrays) {
-    const wrapInArrayTimes = Number(_features.array?.wrapInArrayTimes || 0) + 1;
+    const wrapInArrayTimes = (_features.array?.wrapInArrayTimes || 0) + 1;
     return unwrapZodSchema(schema._def.element, options, {
       ..._features,
       array: {

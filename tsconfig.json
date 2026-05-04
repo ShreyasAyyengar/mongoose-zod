@@ -3,6 +3,7 @@
 
   "compilerOptions": {
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./*"]
     },
@@ -10,10 +11,11 @@
     /* Base Options: */
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "es2020",
+    "target": "es2022",
     "verbatimModuleSyntax": true,
     "allowJs": true,
     "resolveJsonModule": true,
+    "types": ["node", "jest"],
     "moduleDetection": "force",
     "forceConsistentCasingInFileNames": true,
 
@@ -26,7 +28,7 @@
     "module": "NodeNext",
     "outDir": "dist",
 
-    "lib": ["es2020"],
+    "lib": ["es2022"],
   },
 
   "ts-node": {

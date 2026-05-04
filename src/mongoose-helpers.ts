@@ -19,9 +19,7 @@ export const genTimestampsSchema = <CrAt = 'createdAt', UpAt = 'updatedAt'>(
     // Furthermore, if we control timestamps fields manually, the following error occurs upon
     // saving a document if strict mode is set to `throw`:
     // "Path `createdAt` is immutable and strict mode is set to throw."
-  } as {
-    [_ in StringLiteral<NonNullable<CrAt | UpAt>>]: z.ZodDate;
-  });
+  } as Record<StringLiteral<NonNullable<CrAt | UpAt>>, z.ZodDate>);
   mergeMongooseSchemaOptions(schema, {
     timestamps: {
       createdAt: createdAtField == null ? false : createdAtField,

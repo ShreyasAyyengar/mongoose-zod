@@ -18,6 +18,9 @@ enum TestMixedEnum {
   b = 2,
 }
 
+const getEmbeddedSchemaType = (path: unknown) =>
+  (path as any).embeddedSchemaType ?? (path as any).$embeddedSchemaType;
+
 describe('Schema shape replication', () => {
   it('Creates a mongoose schema based on fields provided in a Zod schema', () => {
     const zodSchema = z
@@ -153,9 +156,7 @@ describe('Schema shape replication', () => {
     const Schema = toMongooseSchema(zodSchema);
 
     expect(Schema.paths.friends).toBeInstanceOf(M.Schema.Types.Array);
-    expect((Schema.paths.friends as any).$embeddedSchemaType).not.toBeInstanceOf(
-      M.Schema.Types.Array,
-    );
+    expect(getEmbeddedSchemaType(Schema.paths.friends)).not.toBeInstanceOf(M.Schema.Types.Array);
   });
 
   it('Correctly handles multidimensional arrays', () => {
@@ -169,13 +170,10 @@ describe('Schema shape replication', () => {
     const Schema = toMongooseSchema(zodSchema);
 
     expect(Schema.paths.friendsFriends).toBeInstanceOf(M.Schema.Types.Array);
-    expect((Schema.paths.friendsFriends as any).$embeddedSchemaType).toBeInstanceOf(
-      M.Schema.Types.Array,
-    );
-    expect(
-      (Schema.paths.friendsFriends as any).$embeddedSchemaType.$embeddedSchemaType,
-    ).not.toBeInstanceOf(M.Schema.Types.Array);
-    expect((Schema.paths.matrices as any).$embeddedSchemaType.$embeddedSchemaType).toBeInstanceOf(
+    const friendsFriends = getEmbeddedSchemaType(Schema.paths.friendsFriends);
+    expect(friendsFriends).toBeInstanceOf(M.Schema.Types.Array);
+    expect(getEmbeddedSchemaType(friendsFriends)).not.toBeInstanceOf(M.Schema.Types.Array);
+    expect(getEmbeddedSchemaType(getEmbeddedSchemaType(Schema.paths.matrices))).toBeInstanceOf(
       M.Schema.Types.Array,
     );
   });

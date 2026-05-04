@@ -6,7 +6,7 @@ declare class MongooseZodError extends Error {
 }
 
 type StringLiteral<T> = T extends string ? (string extends T ? never : T) : never;
-declare const genTimestampsSchema: <CrAt = "createdAt", UpAt = "updatedAt">(createdAtField?: "createdAt" | StringLiteral<CrAt> | null, updatedAtField?: "updatedAt" | StringLiteral<UpAt> | null) => z.ZodObject<{ [_ in StringLiteral<CrAt & {}> | StringLiteral<UpAt & {}>]: z.ZodDate; } extends infer T ? { -readonly [P in keyof T]: { [_ in StringLiteral<CrAt & {}> | StringLiteral<UpAt & {}>]: z.ZodDate; }[P]; } : never, z.core.$strip>;
+declare const genTimestampsSchema: <CrAt = "createdAt", UpAt = "updatedAt">(createdAtField?: StringLiteral<CrAt | "createdAt"> | null, updatedAtField?: StringLiteral<UpAt | "updatedAt"> | null) => z.ZodObject<Record<StringLiteral<CrAt & {}> | StringLiteral<UpAt & {}>, z.ZodDate> extends infer T ? { -readonly [P in keyof T]: T[P]; } : never, z.core.$strip>;
 declare const bufferMongooseGetter: (value: unknown) => unknown;
 
 type AnyZodObject = z.ZodObject<any, any>;
@@ -35,7 +35,7 @@ declare const isZodMongoose: (schema: unknown) => schema is ZodMongoose;
 declare const getZodMongooseInternal: (schema: ZodMongoose) => ZodMongooseInternal;
 declare const getMongooseTypeOptions: (schema: z.ZodTypeAny) => MongooseSchemaTypeOptions | undefined;
 declare const getMongooseSchemaOptions: (schema: z.ZodTypeAny) => SchemaOptions | undefined;
-declare const mergeMongooseSchemaOptions: <Schema extends z.ZodType<unknown, unknown, z.core.$ZodTypeInternals<unknown, unknown>>>(schema: Schema, options: SchemaOptions) => Schema;
+declare const mergeMongooseSchemaOptions: <Schema extends z.ZodTypeAny>(schema: Schema, options: SchemaOptions) => Schema;
 declare module 'zod' {
     interface ZodType {
         mongooseTypeOptions: (options: MongooseSchemaTypeOptions) => this;
@@ -43,7 +43,7 @@ declare module 'zod' {
     }
 }
 declare const toZodMongooseSchema: (zObject: AnyZodObject, metadata?: MongooseMetadata<any>) => ZodMongoose;
-declare const addMongooseTypeOptions: <Schema extends z.ZodType<unknown, unknown, z.core.$ZodTypeInternals<unknown, unknown>>>(schema: Schema, options: MongooseSchemaTypeOptions) => Schema;
+declare const addMongooseTypeOptions: <Schema extends z.ZodTypeAny>(schema: Schema, options: MongooseSchemaTypeOptions) => Schema;
 
 type UnknownKeysHandling = 'throw' | 'strip' | 'strip-unless-overridden';
 interface DisableablePlugins {
@@ -64,15 +64,11 @@ declare const toMongooseSchema: (rootZodSchema: ZodMongoose, options?: ToMongoos
     [x: number]: unknown;
     [x: symbol]: unknown;
     [x: string]: unknown;
-}, M.Document<unknown, {}, M.FlatRecord<{
-    [x: number]: unknown;
-    [x: symbol]: unknown;
-    [x: string]: unknown;
-}>, any, M.ResolveSchemaOptions<M.DefaultSchemaOptions>> & M.FlatRecord<{
-    [x: number]: unknown;
-    [x: symbol]: unknown;
-    [x: string]: unknown;
-}> & Required<{
+}, any, unknown, {
+    [x: number]: {};
+    [x: symbol]: {};
+    [x: string]: {};
+} & Required<{
     _id: unknown;
 }> & {
     __v: number;

@@ -38,8 +38,9 @@ const mlvPlugin = tryImportModule('mongoose-lean-virtuals', import.meta.url);
 const mldPlugin = tryImportModule('mongoose-lean-defaults', import.meta.url);
 const mlgPlugin = tryImportModule('mongoose-lean-getters', import.meta.url);
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-const getFixedOptionFn = (fn: Function) =>
+type MongooseOptionFunction = (this: unknown, ...args: any[]) => any;
+
+const getFixedOptionFn = (fn: MongooseOptionFunction) =>
   function (this: unknown, ...args: any[]) {
     const thisFixed = this && this instanceof M.Document ? this : undefined;
     return fn.apply(thisFixed, args);
@@ -257,6 +258,10 @@ const addMongooseSchemaFields = (
         }
         break;
       }
+      case 'bigint':
+      case 'function':
+      case 'symbol':
+      case 'undefined':
       default: {
         errMsgAddendum = 'only boolean, number, string or null literals are supported';
       }

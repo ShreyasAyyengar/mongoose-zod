@@ -107,7 +107,7 @@ const OVERRIDES = [
       '@typescript-eslint/no-unsafe-return': OFF,
       '@typescript-eslint/restrict-template-expressions': OFF,
       // In tests, allow specifying default generic args for clarity without lint noise
-      'disable-autofix/@typescript-eslint/no-unnecessary-type-arguments': OFF,
+      '@typescript-eslint/no-unnecessary-type-arguments': OFF,
     },
   },
 ];
@@ -117,10 +117,12 @@ const OVERRIDES = [
  ******* */
 
 const TS_ESLINT_RULES_NOT_TYPE_CHECKED = {
-  '@typescript-eslint/ban-types': [ERROR, {types: {object: false, '{}': false}}],
+  '@typescript-eslint/ban-types': OFF,
   '@typescript-eslint/consistent-type-imports': [ERROR, {fixStyle: 'inline-type-imports'}],
   '@typescript-eslint/method-signature-style': ERROR,
+  '@typescript-eslint/no-deprecated': OFF,
   '@typescript-eslint/no-import-type-side-effects': ERROR,
+  '@typescript-eslint/no-require-imports': OFF,
   '@typescript-eslint/no-dynamic-delete': WARNING,
   '@typescript-eslint/no-empty-interface': [ERROR, {allowSingleExtends: true}],
   '@typescript-eslint/no-explicit-any': [WARNING, {ignoreRestArgs: true}],
@@ -173,14 +175,12 @@ const TS_ESLINT_RULES_TYPE_CHECKED = {
 
   // Disable auto-fix
 
-  '@typescript-eslint/no-unnecessary-condition': OFF,
-  'disable-autofix/@typescript-eslint/no-unnecessary-condition': [
+  '@typescript-eslint/no-unnecessary-condition': [
     ERROR,
     {allowConstantLoopConditions: true},
   ],
   // Could remove type aliases
-  '@typescript-eslint/no-unnecessary-type-arguments': OFF,
-  'disable-autofix/@typescript-eslint/no-unnecessary-type-arguments': ERROR,
+  '@typescript-eslint/no-unnecessary-type-arguments': ERROR,
 
   // Extension Rules
 
@@ -466,11 +466,6 @@ module.exports = {
   ]),
 
   extends: arrayFlattenAndFilterOutFalsyValues([
-    // 🌐 https://www.npmjs.com/package/eslint-plugin-sonarjs
-    'plugin:sonarjs/recommended',
-    // 🌐 https://www.npmjs.com/package/eslint-plugin-unicorn
-    'plugin:unicorn/recommended',
-
     'eslint:recommended',
     // 🌐 https://www.npmjs.com/package/eslint-config-airbnb-base
     'airbnb-base',
